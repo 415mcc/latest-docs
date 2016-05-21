@@ -1,0 +1,26 @@
+{
+  "manifest_version": 2,
+  "name": "latest-docs",
+  "version": "0.1",
+
+  "description": "Chrome extension to redirect to specific documentation versions.",
+
+  "browser_action": {
+    "default_icon": "icon.png",
+    "default_popup": "popup.html"
+  },
+
+  "author": "lachlan@lachm.com",
+
+  "background": {
+    "scripts": ["background.js"]
+  },
+
+  "permissions": [
+    "webRequest",
+    "webRequestBlocking",
+    "storage",
+    "*://docs.python.org/*",
+    "*://docs.oracle.com/javase/*"
+  ]
+}
