@@ -1,0 +1,39 @@
+{
+  "name": "latest-docs",
+  "version": "0.1.0",
+  "description": "Chrome extension to redirect to specific documentation versions.",
+  "main": "background.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/lachm/latest-docs.git"
+  },
+  "author": "Lachlan McCarty",
+  "license": "MIT",
+  "bugs": {
+    "url": "https://github.com/lachm/latest-docs/issues"
+  },
+  "homepage": "https://github.com/lachm/latest-docs#readme",
+  "devDependencies": {
+    "eslint": "^2.13.1",
+    "eslint-config-google": "^0.6.0"
+  },
+  "eslintConfig": {
+    "extends": "google",
+    "installedESLint": true,
+    "globals": {
+      "chrome": false
+    },
+    "env": {
+      "browser": true,
+      "node": true,
+      "es6": true
+    },
+    "rules": {
+      "space-before-function-paren": ["error", "always"],
+      "require-jsdoc": "off"
+    }
+  }
+}
