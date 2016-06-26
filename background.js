@@ -1,39 +1,81 @@
-var matches = {
-  'Python 2 to Python 3': {
+const matches = [
+  {
+    name: 'Python 2 to Python 3',
     // 2.x to 3
     regexp: /(https?:\/\/docs.python.org\/)2(?:\.\d)?(\/.*)/,
-    // 2.x and 2.x to 3
+    // 2.x and 3.x to 3
     // regexp: /(https?:\/\/docs.python.org\/)(?:2(?:\.\d)?|3\.\d)(\/.*)/,
     newSubStr: '$13$2'
   },
-  'Java SE 8': {
+  {
+    name: 'Java SE 8',
     regexp: /(https?:\/\/docs.oracle.com\/javase\/)(?:1.5.0|[67])(\/.*)/,
     newSubStr: '$18$2'
   }
-};
+];
 
-for (matchName in matches) {
-  matches[matchName].enabled = true;
+const STORAGE_NAME = 'matchData';
+let cached = [];
+
+function getMatchesData (callback) {
+  chrome.storage.sync.get(STORAGE_NAME, items => {
+    cached = items[STORAGE_NAME];
+    callback(items[STORAGE_NAME]);
+  });
 }
 
-chrome.storage.sync.get(Object.keys(matches),
-  function(items) {
-    for (matchName in matches) {
-      if (items[matchName] != undefined) {
-        matches[matchName].enabled = items[matchName];
-      }
-    }
+function setMatchesData (callback) {
+  const setVal = [];
+  let obj = {};
+  matches.forEach((elem, index, array) => {
+    setVal.push({name: elem.name, enabled: true});
   });
+  obj[STORAGE_NAME] = setVal;
+  chrome.storage.sync.set(obj, () => {
+    cached = setVal;
+    if (callback) callback();
+  });
+}
+
+function validateData (onFailure) {
+  getMatchesData(matchData => {
+    const notArray = !Array.isArray(matchData);
+    // some returns true if any iteration returns true
+    const failed = notArray || matchData.some((elem, index, array) => {
+      return !(matches[index] &&
+        elem.hasOwnProperty('enabled') && typeof elem.enabled === 'boolean' &&
+        elem.hasOwnProperty('name') && elem.name === matches[index].name);
+    });
+
+    if (failed) onFailure();
+  });
+}
+
+function getEnabledMatches () {
+  const enabledMatches = [];
+  cached.forEach((elem, index, array) => {
+    if (elem.enabled) enabledMatches.push(matches[index]);
+  });
+  return enabledMatches;
+}
+
+validateData(setMatchesData);
+
+chrome.storage.onChanged.addListener(object => {
+  if (object.hasOwnProperty(STORAGE_NAME) &&
+      object[STORAGE_NAME].hasOwnProperty('newValue')) {
+    cached = object[STORAGE_NAME].newValue;
+  }
+});
 
 chrome.webRequest.onBeforeRequest.addListener(
-  function(details) {
-    var newUrl = details.url;
-    for (var matchName in matches) {
-      if (matches[matchName].enabled)
-        newUrl = newUrl.replace(matches[matchName].regexp,
-                    matches[matchName].newSubStr);
-    }
-    return newUrl == details.url ? {} : {redirectUrl: newUrl};
+  details => {
+    let newUrl = details.url;
+    const enabledMatches = getEnabledMatches();
+    enabledMatches.forEach((elem, index, array) => {
+      newUrl = newUrl.replace(elem.regexp, elem.newSubStr);
+    });
+    return newUrl === details.url ? {} : {redirectUrl: newUrl};
   },
   {
     urls: ['*://*/*'],
@@ -41,26 +83,3 @@ chrome.webRequest.onBeforeRequest.addListener(
   },
   ['blocking']
 );
-
-function changeStatus(name) {
-  for (matchName in matches) {
-    if (matchName == name) {
-      matches[matchName].enabled = !matches[matchName].enabled;
-      chrome.storage.sync.set({matchName: matches[matchName.enabled]});
-      break;
-    }
-  }
-}
-
-function getStatus(name) {
-  for (matchName in matches) {
-    if (matchName == name) {
-      return matches[matchName].enabled;
-    }
-  }
-  return false;
-}
-
-function getNames() {
-  return Object.keys(matches);
-}

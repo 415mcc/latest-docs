@@ -1,29 +1,53 @@
-var DISABLE = 'Disable';
-var ENABLE = 'Enable';
+// assumes, for the most part, that event page has setup storage correctly
+// popup does very little data validation
 
-function changeStatus(background, names, button) {
-  button.innerHTML = button.innerHTML == DISABLE ? ENABLE : DISABLE;
-  background.changeStatus(names[button.id.substring(1)]);
-}
+const STORAGE_NAME = 'matchData';
 
-var background = chrome.extension.getBackgroundPage();
-var names = background.getNames().sort();
-var parent = document.getElementById('switchboard');
-
-for (nameindex in names) {
-  console.log(nameindex);
-  var name = names[nameindex];
-  var div = document.createElement('div');
-  div.appendChild(document.createTextNode(name + ':'));
-
-  var button = document.createElement('button');
-  var status = background.getStatus(name);
-  button.innerHTML = status ? DISABLE : ENABLE;
-  button.id = 'b' + nameindex;
-  button.addEventListener('click', function() {
-    changeStatus(background, names, this);
+function getMatchesData (callback) {
+  chrome.storage.sync.get(STORAGE_NAME, items => {
+    callback(items[STORAGE_NAME]);
   });
-  div.appendChild(button);
-
-  parent.appendChild(div);
 }
+
+function setMatchesData (data, callback) {
+  let obj = {};
+  obj[STORAGE_NAME] = data;
+  chrome.storage.sync.set(obj, () => {
+    if (callback) callback();
+  });
+}
+
+function switchStatus (index, callback) {
+  getMatchesData(matchData => {
+    matchData[index].enabled = !matchData[index].enabled;
+    setMatchesData(matchData, callback);
+  });
+}
+
+function addCheckbox (parent, index, name, enabled) {
+  let input = document.createElement('input');
+  input.id = 'match' + index;
+  input.type = 'checkbox';
+  input.checked = enabled;
+  input.addEventListener('change', () => {
+    switchStatus(index);
+  });
+  parent.appendChild(input);
+
+  let label = document.createElement('label');
+  label.setAttribute('for', 'match' + index);
+  label.appendChild(document.createTextNode(name + '\n'));
+  parent.appendChild(label);
+}
+
+function createCheckboxes () {
+  getMatchesData(matchData => {
+    let parent = document.getElementById('switchboard');
+    matchData.forEach((elem, index, array) => {
+      addCheckbox(parent, index, elem.name, elem.enabled);
+    });
+  });
+}
+
+createCheckboxes();
+document.activeElement.blur();
