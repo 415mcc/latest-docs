@@ -11,6 +11,12 @@ const matches = [
     name: 'Java SE 8',
     regexp: /(https?:\/\/docs.oracle.com\/javase\/)(?:1.5.0|[67])(\/.*)/,
     newSubStr: '$18$2'
+  },
+  {
+    name: 'PostgreSQL Current',
+    regexp:
+      /(https?:\/\/www.postgresql.org\/docs\/)(?:devel|\d+(?:\.\d+)?)(\/.*)/,
+    newSubStr: '$1current$2'
   }
 ];
 
@@ -39,13 +45,14 @@ function setMatchesData (callback) {
 
 function validateData (onFailure) {
   getMatchesData(matchData => {
-    const notArray = !Array.isArray(matchData);
     // some returns true if any iteration returns true
-    const failed = notArray || matchData.some((elem, index, array) => {
-      return !(matches[index] &&
-        elem.hasOwnProperty('enabled') && typeof elem.enabled === 'boolean' &&
-        elem.hasOwnProperty('name') && elem.name === matches[index].name);
-    });
+    const failed = !Array.isArray(matchData) ||
+      matchData.length !== matches.length ||
+      matchData.some((elem, index, array) => {
+        return !(matches[index] &&
+          elem.hasOwnProperty('enabled') && typeof elem.enabled === 'boolean' &&
+          elem.hasOwnProperty('name') && elem.name === matches[index].name);
+      });
 
     if (failed) onFailure();
   });

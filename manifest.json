@@ -31,6 +31,7 @@
     "webRequestBlocking",
     "storage",
     "*://docs.python.org/*",
-    "*://docs.oracle.com/javase/*"
+    "*://docs.oracle.com/javase/*",
+    "*://www.postgresql.org/docs/*"
   ]
 }
