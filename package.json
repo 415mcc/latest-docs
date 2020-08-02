@@ -17,7 +17,7 @@
   },
   "homepage": "https://github.com/lachm/latest-docs#readme",
   "devDependencies": {
-    "eslint": "^2.13.1",
+    "eslint": "^7.6.0",
     "eslint-config-google": "^0.6.0"
   },
   "eslintConfig": {
